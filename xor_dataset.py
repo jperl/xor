@@ -42,7 +42,7 @@ class XORDataset(data.Dataset):
       torch.save(test_set, file)
 
   def __getitem__(self, index):
-    return self.features[:, index], self.labels[index]
+    return self.features[index, :], self.labels[index]
 
   def __len__(self):
     return len(self.features)
@@ -58,10 +58,11 @@ def get_random_bits_parity(num_sequences=DEFAULT_NUM_SEQUENCES, num_bits=DEFAULT
 
   # if total number of ones is odd, set even parity bit to 1, otherwise 0
   # https://en.wikipedia.org/wiki/Parity_bit
-  parity = (bit_sequences.sum(axis=1) % 2 != 0).astype(int)
+  parity = (bit_sequences.sum(axis=1) % 2 != 0)
 
-  return bit_sequences, parity
+  return bit_sequences.astype('float32'), parity.astype('float32')
 
 
 if __name__ == '__main__':
+  remove_path(XORDataset.data_folder)
   XORDataset(test_size=0.2)
