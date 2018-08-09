@@ -3,10 +3,13 @@ from torch.utils.data import DataLoader
 from xor_dataset import XORDataset
 
 BATCH_SIZE = 32
+HIDDEN_SIZE = 1
+NUM_LAYERS = 1
 
-model = torch.nn.LSTM(batch_first=True, input_size=1, hidden_size=1, num_layers=1)
+model = torch.nn.LSTM(
+    batch_first=True, input_size=1, hidden_size=HIDDEN_SIZE, num_layers=NUM_LAYERS)
 
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-03)
+optimizer = torch.optim.SGD(model.parameters(), lr=1e-2)
 loss_fn = torch.nn.BCEWithLogitsLoss()
 train_loader = DataLoader(XORDataset(), batch_size=BATCH_SIZE, shuffle=True)
 
@@ -22,9 +25,7 @@ for inputs, targets in train_loader:
   optimizer.zero_grad()
 
   # reset hidden state per sequence
-  # state is (num_cells, batch_size, hidden_size)
-  state_shape = 1, BATCH_SIZE, 1
-  h0 = c0 = inputs.new_zeros(state_shape)
+  h0 = c0 = inputs.new_zeros((NUM_LAYERS, BATCH_SIZE, HIDDEN_SIZE))
 
   final_outputs, _ = model(inputs, (h0, c0))
 
@@ -37,5 +38,5 @@ for inputs, targets in train_loader:
   step += 1
 
   loss_val = loss.item()
-  if step % 500 == 0:
+  if step % 100 == 0:
     print(f'LOSS step {step}: {loss_val}')
