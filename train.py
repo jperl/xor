@@ -20,6 +20,7 @@ class ModelParams(NamedTuple):
 def train(params: ModelParams):
   model = torch.nn.LSTM(
       batch_first=True, input_size=1, hidden_size=params.hidden_size, num_layers=params.num_layers)
+  activation = torch.nn.Sigmoid()
 
   optimizer = torch.optim.SGD(model.parameters(), lr=params.learning_rate)
   loss_fn = torch.nn.BCEWithLogitsLoss()
@@ -40,18 +41,21 @@ def train(params: ModelParams):
       # reset hidden state per sequence
       h0 = c0 = inputs.new_zeros((params.num_layers, params.batch_size, params.hidden_size))
 
-      final_outputs, _ = model(inputs, (h0, c0))
+      logits, _ = model(inputs, (h0, c0))
 
-      # select the last prediction
-      loss = loss_fn(final_outputs, targets)
+      # BCEWithLogitsLoss will do the activation (it's more stable)
+      loss = loss_fn(logits, targets)
+      predictions = activation(logits)
 
       loss.backward()
       optimizer.step()
       step += 1
 
       loss_val = loss.item()
+      accuracy_val = ((predictions > 0.5) == (targets > 0.5)).type(torch.FloatTensor).mean()
+
       if step % 500 == 0:
-        print(f'epoch {epoch}, step {step}, loss {loss_val}')
+        print(f'epoch {epoch}, step {step}, loss {loss_val:.{4}f}, accuracy {accuracy_val:.{3}f}')
 
 
 def get_arguments():
