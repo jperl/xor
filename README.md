@@ -11,7 +11,3 @@
 Install Dependencies
 
     pip install -r requirements.txt
-
-Create the Data
-
-    python generate_sequences.py
