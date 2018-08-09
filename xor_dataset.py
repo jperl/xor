@@ -51,14 +51,18 @@ class XORDataset(data.Dataset):
 def get_random_bits_parity(num_sequences=DEFAULT_NUM_SEQUENCES, num_bits=DEFAULT_NUM_BITS):
   """Generate random bit sequences and their parity. (Our features and labels).
     Returns:
-      bit_sequences: An numpy integer array with shape [num_sequences, num_bits].
-      parity: The even parity value corresponding to each bit sequence.
+      bit_sequences: A numpy array of bit sequences with shape [num_sequences, num_bits].
+      parity: A numpy array of even parity values corresponding to each bit
+        with shape [num_sequences, num_bits].
     """
   bit_sequences = np.random.randint(2, size=(num_sequences, num_bits))
 
   # if total number of ones is odd, set even parity bit to 1, otherwise 0
   # https://en.wikipedia.org/wiki/Parity_bit
-  parity = (bit_sequences.sum(axis=1) % 2 != 0)
+
+  bitsum = np.cumsum(bit_sequences, axis=1)
+  # if bitsum is even: False, odd: True
+  parity = bitsum % 2 != 0
 
   return bit_sequences.astype('float32'), parity.astype('float32')
 

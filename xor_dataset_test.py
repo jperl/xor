@@ -11,16 +11,22 @@ def test_get_random_bits_parity():
   assert_equal(
       bit_sequences,
       [
-          # sum 3 -> odd -> parity 1
+          #even, odd, even, even, odd
           [0, 1, 1, 0, 1],
-          # sum 5 -> odd -> parity 1
+          #odd, even, odd, even, odd
           [1, 1, 1, 1, 1],
-          # sum 2 -> even -> parity 0
+          # odd, odd, odd, even, even
           [1, 0, 0, 1, 0],
-          # sum 1 -> odd -> parity 1
+          # even, even, even, even, odd
           [0, 0, 0, 0, 1],
-          # sum 2 -> even -> 0
+          # even, odd, even, even, even
           [0, 1, 1, 0, 0]
       ])
 
-  assert_equal(parity, [1, 1, 0, 1, 0])
+  assert_equal(parity, [
+    [0, 1, 0, 0, 1],
+    [1, 0, 1, 0, 1],
+    [1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 1],
+    [0, 1, 0, 0, 0],
+  ])
