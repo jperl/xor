@@ -5,7 +5,7 @@ import torch.utils.data as data
 
 from utils import ensure_path, remove_path
 
-DEFAULT_NUM_BITS = 5
+DEFAULT_NUM_BITS = 50
 DEFAULT_NUM_SEQUENCES = 100000
 
 
@@ -59,7 +59,6 @@ def get_random_bits_parity(num_sequences=DEFAULT_NUM_SEQUENCES, num_bits=DEFAULT
 
   # if total number of ones is odd, set even parity bit to 1, otherwise 0
   # https://en.wikipedia.org/wiki/Parity_bit
-
 
   bitsum = np.cumsum(bit_sequences, axis=1)
   # if bitsum is even: False, odd: True
