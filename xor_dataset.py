@@ -22,6 +22,12 @@ class XORDataset(data.Dataset):
     filename = 'train.pt' if self.train else 'test.pt'
     self.features, self.labels = torch.load(f'{self.data_folder}/{filename}')
 
+    # expand the dimensions for the lstm
+    # [batch, bits] -> [batch, bits, 1]
+    self.features = np.expand_dims(self.features, -1)
+    # [batch, parity] -> [batch, parity, 1]
+    self.labels = np.expand_dims(self.labels, -1)
+
   def ensure_sequences(self):
     if os.path.exists(self.data_folder):
       return
