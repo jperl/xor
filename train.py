@@ -57,6 +57,7 @@ def train(params: ModelParams):
   optimizer = torch.optim.SGD(model.parameters(), lr=params.lr, momentum=params.momentum)
   loss_fn = torch.nn.BCEWithLogitsLoss()
   train_loader = DataLoader(XORDataset(), batch_size=params.batch_size, shuffle=True)
+  test_loader = DataLoader(XORDataset(train=False), batch_size=params.batch_size)
 
   step = 0
 
@@ -75,31 +76,27 @@ def train(params: ModelParams):
       optimizer.step()
       step += 1
 
-      loss_val = loss.item()
-      accuracy_val = ((predictions > 0.5) == (targets > 0.5)).type(torch.FloatTensor).mean()
+      accuracy = ((predictions > 0.5) == (targets > 0.5)).type(torch.FloatTensor).mean()
 
       if step % 500 == 0:
-        print(f'epoch {epoch}, step {step}, loss {loss_val:.{4}f}, accuracy {accuracy_val:.{3}f}')
+        print(f'epoch {epoch}, step {step}, loss {loss.item():.{4}f}, accuracy {accuracy:.{3}f}')
 
     # evaluate per epoch
-    evaluate(model)
+    evaluate(model, test_loader)
 
 
-def evaluate(model):
-  test_loader = DataLoader(XORDataset(train=False), batch_size=params.batch_size)
+def evaluate(model, loader):
+  is_correct = np.array([])
 
-  prediction_is_correct = np.array([])
-
-  for inputs, targets in test_loader:
+  for inputs, targets in loader:
     inputs = inputs.to(params.device)
     targets = targets.to(params.device)
     with torch.no_grad():
       logits, predictions = model(inputs)
-      prediction_is_correct = np.append(prediction_is_correct,
-                                        ((predictions > 0.5) == (targets > 0.5)))
+      is_correct = np.append(is_correct, ((predictions > 0.5) == (targets > 0.5)))
 
-  accuracy_val = prediction_is_correct.mean()
-  print(f'test accuracy {accuracy_val:.{3}f}')
+  accuracy = is_correct.mean()
+  print(f'test accuracy {accuracy:.{3}f}')
 
 
 def get_arguments():
