@@ -16,19 +16,3 @@ def register_parser_types(parser, params_named_tuple):
 
   for key, _type in hints.items():
     parser.add_argument(f'--{key}', type=_type, default=defaults.get(key))
-
-
-# ------------------------- Path Utils -------------------------
-
-
-def ensure_path(path):
-  """Create the path if it does not exist"""
-  if not os.path.exists(path):
-    os.makedirs(path)
-  return path
-
-
-def remove_path(path):
-  """Remove the path if it exists."""
-  if os.path.exists(path):
-    shutil.rmtree(path)
