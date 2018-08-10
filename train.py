@@ -11,11 +11,12 @@ class ModelParams(NamedTuple):
   # train loop
   batch_size: int = 32
   device: str = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-  epochs: int = 5
+  epochs: int = 15
 
   # lstm
   hidden_size: int = 2
   lr: float = 1e-1
+  momentum: float = 0.9
   num_layers: int = 1
 
 
@@ -53,7 +54,7 @@ class LSTM(torch.nn.Module):
 def train(params: ModelParams):
   model = LSTM(params).to(params.device)
 
-  optimizer = torch.optim.Adam(model.parameters(), lr=params.lr)
+  optimizer = torch.optim.SGD(model.parameters(), lr=params.lr, momentum=params.momentum)
   loss_fn = torch.nn.BCEWithLogitsLoss()
   train_loader = DataLoader(XORDataset(), batch_size=params.batch_size, shuffle=True)
 
