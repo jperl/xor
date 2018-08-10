@@ -17,7 +17,7 @@ class ModelParams(NamedTuple):
   # lstm
   hidden_size: int = 2
   lr: float = 5e-1
-  momentum: float = 0.9
+  momentum: float = 0.99
   num_layers: int = 1
 
 
