@@ -38,6 +38,8 @@ class LSTM(torch.nn.Module):
 
     self.activation = torch.nn.Sigmoid()
 
+    self._initialize_weights()
+
   def forward(self, inputs):
     batch_size = inputs.size()[0]
 
@@ -50,6 +52,12 @@ class LSTM(torch.nn.Module):
     predictions = self.activation(logits)
 
     return logits, predictions
+
+  def _initialize_weights(self):
+    for name, param in self.named_parameters():
+      print('NAME', name)
+      if 'weight' in name:
+        nn.init.xavier_normal(param)
 
 
 def train(params: ModelParams):
