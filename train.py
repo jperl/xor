@@ -9,16 +9,19 @@ from utils import register_parser_types
 
 class ModelParams(NamedTuple):
   # train loop
-  batch_size: int = 32
+  batch_size: int = 8
   device: str = 'cuda:0' if torch.cuda.is_available() else 'cpu'
   epochs: int = 15
   resume_path: str = None
 
   # lstm
   hidden_size: int = 2
-  lr: float = 1e-1
-  momentum: float = 0.9
+  lr: float = 1.0
   num_layers: int = 1
+
+
+# make it deterministic
+torch.manual_seed(0)
 
 
 class LSTM(torch.nn.Module):
@@ -38,8 +41,6 @@ class LSTM(torch.nn.Module):
 
     self.activation = torch.nn.Sigmoid()
 
-    self._initialize_weights()
-
   def forward(self, inputs):
     batch_size = inputs.size()[0]
 
@@ -53,17 +54,11 @@ class LSTM(torch.nn.Module):
 
     return logits, predictions
 
-  def _initialize_weights(self):
-    for name, param in self.named_parameters():
-      print('NAME', name)
-      if 'weight' in name:
-        nn.init.xavier_normal(param)
-
 
 def train(params: ModelParams):
   model = LSTM(params).to(params.device)
 
-  optimizer = torch.optim.SGD(model.parameters(), lr=params.lr, momentum=params.momentum)
+  optimizer = torch.optim.SGD(model.parameters(), lr=params.lr)
   loss_fn = torch.nn.BCEWithLogitsLoss()
   train_loader = DataLoader(XORDataset(), batch_size=params.batch_size, shuffle=True)
   test_loader = DataLoader(XORDataset(train=False), batch_size=params.batch_size)
@@ -96,7 +91,6 @@ def train(params: ModelParams):
 
     # evaluate per epoch
     evaluate(model, test_loader)
-
     save_train_state(step, epoch, model, optimizer)
 
 

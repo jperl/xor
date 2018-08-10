@@ -8,6 +8,8 @@ from utils import ensure_path, remove_path
 DEFAULT_NUM_BITS = 50
 DEFAULT_NUM_SEQUENCES = 100000
 
+np.random.seed(0)
+
 
 class XORDataset(data.Dataset):
   data_folder = './data'
