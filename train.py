@@ -16,7 +16,8 @@ class ModelParams(NamedTuple):
 
   # lstm
   hidden_size: int = 2
-  lr: float = 1.0
+  lr: float = 5e-1
+  momentum: float = 0.9
   num_layers: int = 1
 
 
@@ -58,7 +59,7 @@ class LSTM(torch.nn.Module):
 def train(params: ModelParams):
   model = LSTM(params).to(params.device)
 
-  optimizer = torch.optim.SGD(model.parameters(), lr=params.lr)
+  optimizer = torch.optim.SGD(model.parameters(), lr=params.lr, momentum=params.momentum)
   loss_fn = torch.nn.BCEWithLogitsLoss()
   train_loader = DataLoader(XORDataset(), batch_size=params.batch_size, shuffle=True)
   test_loader = DataLoader(XORDataset(train=False), batch_size=params.batch_size)
