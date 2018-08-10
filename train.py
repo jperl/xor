@@ -1,18 +1,17 @@
-import argparse
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from typing import NamedTuple
 from xor_dataset import XORDataset
-from utils import register_parser_types
+from utils import get_arguments
 
 
 class ModelParams(NamedTuple):
   # train loop
   batch_size: int = 8
+  batch_size_test: int = 256
   device: str = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-  epochs: int = 15
-  resume_path: str = None
+  epochs: int = 1
 
   # lstm
   hidden_size: int = 2
@@ -46,7 +45,7 @@ class LSTM(torch.nn.Module):
     batch_size = inputs.size()[0]
 
     # reset hidden state per sequence
-    h0 = c0 = inputs.new_zeros((params.num_layers, params.batch_size, params.hidden_size))
+    h0 = c0 = inputs.new_zeros((params.num_layers, batch_size, params.hidden_size))
 
     lstm_out, _ = self.lstm(inputs, (h0, c0))
     logits = self.hidden2logits(lstm_out)
@@ -62,16 +61,12 @@ def train(params: ModelParams):
   optimizer = torch.optim.SGD(model.parameters(), lr=params.lr, momentum=params.momentum)
   loss_fn = torch.nn.BCEWithLogitsLoss()
   train_loader = DataLoader(XORDataset(), batch_size=params.batch_size)
-  # test separately generated xor
-  test_loader = DataLoader(XORDataset(), batch_size=params.batch_size)
+  # evaluate accuracy on separate data from training
+  test_loader = DataLoader(XORDataset(), batch_size=params.batch_size_test)
 
   step = 0
-  epoch = 1
 
-  if params.resume_path:
-    step, epoch = resume_train_state(params.resume_path, model, optimizer)
-
-  for epoch in range(epoch, params.epochs):
+  for epoch in range(1, params.epochs + 1):
     for inputs, targets in train_loader:
       inputs = inputs.to(params.device)
       targets = targets.to(params.device)
@@ -88,29 +83,15 @@ def train(params: ModelParams):
 
       accuracy = ((predictions > 0.5) == (targets > 0.5)).type(torch.FloatTensor).mean()
 
-      if step % 500 == 0:
+      if step % 250 == 0:
         print(f'epoch {epoch}, step {step}, loss {loss.item():.{4}f}, accuracy {accuracy:.{3}f}')
 
-    # evaluate per epoch
-    evaluate(model, test_loader)
-    save_train_state(step, epoch, model, optimizer)
-
-
-def resume_train_state(path, model, optimizer):
-  state = torch.load(path)
-  model.load_state_dict(state['model'])
-  optimizer.load_state_dict(state['optimizer'])
-  return state['step'], state['epoch']
-
-
-def save_train_state(step, epoch, model, optimizer):
-  state = {
-      'epoch': epoch + 1,
-      'model': model.state_dict(),
-      'optimizer': optimizer.state_dict(),
-      'step': step
-  }
-  torch.save(state, f'./data/epoch_{epoch}.pt')
+      if step % 1000 == 0:
+        test_accuracy = evaluate(model, test_loader)
+        print(f'test accuracy {test_accuracy:.{3}f}')
+        if test_accuracy == 1.0:
+          # stop early
+          break
 
 
 def evaluate(model, loader):
@@ -124,16 +105,9 @@ def evaluate(model, loader):
       is_correct = np.append(is_correct, ((predictions > 0.5) == (targets > 0.5)))
 
   accuracy = is_correct.mean()
-  print(f'test accuracy {accuracy:.{3}f}')
-
-
-def get_arguments():
-  parser = argparse.ArgumentParser()
-  register_parser_types(parser, ModelParams)
-  arguments = parser.parse_args()
-  return arguments
+  return accuracy
 
 
 if __name__ == '__main__':
-  params = get_arguments()
+  params = get_arguments(ModelParams)
   train(params)

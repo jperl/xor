@@ -1,5 +1,4 @@
-import os
-import shutil
+import argparse
 import typing
 
 # ------------------------- Parser Utils -------------------------
@@ -16,3 +15,10 @@ def register_parser_types(parser, params_named_tuple):
 
   for key, _type in hints.items():
     parser.add_argument(f'--{key}', type=_type, default=defaults.get(key))
+
+
+def get_arguments(params_named_tuple):
+  parser = argparse.ArgumentParser()
+  register_parser_types(parser, params_named_tuple)
+  arguments = parser.parse_args()
+  return arguments
