@@ -15,7 +15,7 @@ class ModelParams(NamedTuple):
 
   # lstm
   hidden_size: int = 2
-  learning_rate: float = 1
+  lr: float = 1e-1
   num_layers: int = 1
 
 
@@ -25,7 +25,6 @@ class LSTM(torch.nn.Module):
 
     self._params = params
 
-    # dropout = 0 if config.n_layers == 1 else config.dp_ratio
     self.lstm = torch.nn.LSTM(
         batch_first=True,
         input_size=1,
@@ -54,7 +53,7 @@ class LSTM(torch.nn.Module):
 def train(params: ModelParams):
   model = LSTM(params).to(params.device)
 
-  optimizer = torch.optim.Adam(model.parameters())  #, lr=params.learning_rate)
+  optimizer = torch.optim.Adam(model.parameters(), lr=params.lr)
   loss_fn = torch.nn.BCEWithLogitsLoss()
   train_loader = DataLoader(XORDataset(), batch_size=params.batch_size, shuffle=True)
 
