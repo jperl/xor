@@ -12,6 +12,7 @@ class ModelParams(NamedTuple):
   batch_size: int = 32
   device: str = 'cuda:0' if torch.cuda.is_available() else 'cpu'
   epochs: int = 15
+  resume_path: str = None
 
   # lstm
   hidden_size: int = 2
@@ -60,8 +61,12 @@ def train(params: ModelParams):
   test_loader = DataLoader(XORDataset(train=False), batch_size=params.batch_size)
 
   step = 0
+  epoch = 1
 
-  for epoch in range(1, params.epochs):
+  if params.resume_path:
+    step, epoch = resume_train_state(params.resume_path, model, optimizer)
+
+  for epoch in range(epoch, params.epochs):
     for inputs, targets in train_loader:
       inputs = inputs.to(params.device)
       targets = targets.to(params.device)
@@ -83,6 +88,25 @@ def train(params: ModelParams):
 
     # evaluate per epoch
     evaluate(model, test_loader)
+
+    save_train_state(step, epoch, model, optimizer)
+
+
+def resume_train_state(path, model, optimizer):
+  state = torch.load(path)
+  model.load_state_dict(state['model'])
+  optimizer.load_state_dict(state['optimizer'])
+  return state['step'], state['epoch']
+
+
+def save_train_state(step, epoch, model, optimizer):
+  state = {
+      'epoch': epoch + 1,
+      'model': model.state_dict(),
+      'optimizer': optimizer.state_dict(),
+      'step': step
+  }
+  torch.save(state, f'./data/epoch_{epoch}.pt')
 
 
 def evaluate(model, loader):
