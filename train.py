@@ -36,19 +36,13 @@ class LSTM(torch.nn.Module):
         hidden_size=params.hidden_size,
         num_layers=params.num_layers)
 
-    # The linear layer that maps from hidden state space to the logits
-    self.hidden2logits = torch.nn.Linear(params.hidden_size, 1)
-
+    # map from the hidden state space to the logits
+    self.hidden_to_logits = torch.nn.Linear(params.hidden_size, 1)
     self.activation = torch.nn.Sigmoid()
 
   def forward(self, inputs):
-    batch_size = inputs.size()[0]
-
-    # reset hidden state per sequence
-    h0 = c0 = inputs.new_zeros((params.num_layers, batch_size, params.hidden_size))
-
-    lstm_out, _ = self.lstm(inputs, (h0, c0))
-    logits = self.hidden2logits(lstm_out)
+    lstm_out, _ = self.lstm(inputs)
+    logits = self.hidden_to_logits(lstm_out)
 
     predictions = self.activation(logits)
 
