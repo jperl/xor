@@ -12,8 +12,11 @@ np.random.seed(0)
 class XORDataset(data.Dataset):
   data_folder = './data'
 
-  def __init__(self):
-    self.features, self.labels = get_random_bits_parity()
+  def __init__(self, num_sequences=DEFAULT_NUM_SEQUENCES, num_bits=DEFAULT_NUM_BITS):
+    self.num_sequences = num_sequences
+    self.num_bits = num_bits
+
+    self.features, self.labels = get_random_bits_parity(num_sequences, num_bits)
 
     # expand the dimensions for the lstm
     # [batch, bits] -> [batch, bits, 1]
@@ -29,7 +32,7 @@ class XORDataset(data.Dataset):
     return len(self.features)
 
 
-def get_random_bits_parity(num_sequences=DEFAULT_NUM_SEQUENCES, num_bits=DEFAULT_NUM_BITS):
+def get_random_bits_parity(num_sequences, num_bits):
   """Generate random bit sequences and their parity. (Our features and labels).
     Returns:
       bit_sequences: A numpy array of bit sequences with shape [num_sequences, num_bits].
