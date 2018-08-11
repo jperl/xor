@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from torch.nn.utils import rnn as rnn_utils
 from torch.utils.data import DataLoader
 from typing import NamedTuple
 from xor_dataset import XORDataset
@@ -36,14 +37,23 @@ class LSTM(torch.nn.Module):
         hidden_size=params.hidden_size,
         num_layers=params.num_layers)
 
-    # map from the hidden state space to the logits
     self.hidden_to_logits = torch.nn.Linear(params.hidden_size, 1)
     self.activation = torch.nn.Sigmoid()
 
   def forward(self, inputs):
-    lstm_out, _ = self.lstm(inputs)
-    logits = self.hidden_to_logits(lstm_out)
+    batch_size = inputs.size()[0]
+    num_bits = inputs.size()[1]
 
+    # pack the inputs
+    lengths = torch.ones(batch_size, dtype=torch.int) * num_bits
+    packed_inputs = rnn_utils.pack_padded_sequence(
+        inputs, lengths, batch_first=True).to(params.device)
+
+    lstm_out, _ = self.lstm(packed_inputs)
+
+    unpacked, _ = rnn_utils.pad_packed_sequence(lstm_out, batch_first=True)
+
+    logits = self.hidden_to_logits(unpacked)
     predictions = self.activation(logits)
 
     return logits, predictions
@@ -54,9 +64,11 @@ def train(params: ModelParams):
 
   optimizer = torch.optim.SGD(model.parameters(), lr=params.lr, momentum=params.momentum)
   loss_fn = torch.nn.BCEWithLogitsLoss()
-  train_loader = DataLoader(XORDataset(), batch_size=params.batch_size)
-  # evaluate accuracy on separate data from training
-  test_loader = DataLoader(XORDataset(), batch_size=params.batch_size_test)
+
+  # evaluate on separate data from training
+  train_dataset, test_dataset = XORDataset(), XORDataset()
+  train_loader = DataLoader(train_dataset, batch_size=params.batch_size)
+  test_loader = DataLoader(test_dataset, batch_size=params.batch_size_test)
 
   step = 0
 
