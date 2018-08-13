@@ -20,15 +20,16 @@ Yes. It converges after 4,000 examples. It converges faster is because it is eas
 
 ## Getting Started
 
-Install dependencies
+**Install dependencies**
 
     pip install -r requirements.txt
 
-Train without varying lengths
+**Train an LSTM without varying lengths**
 
     python train.py --momentum 0.99
 
-Train with varying lengths
+**Train an LSTM with varying lengths**
 
     python train.py --vary_lengths True --momentum 0.9
 
+**Train a basic neural network written in Numpy to learn XOR on [colab](https://colab.research.google.com/github/hedgehoglabs/xor/blob/master/notebooks/NumpyXOR.ipynb)**
